@@ -1,0 +1,11 @@
+@HippoServer_HostAddress = http://localhost:5129
+
+GET {{HippoServer_HostAddress}}/todos/
+Accept: application/json
+
+###
+
+GET {{HippoServer_HostAddress}}/todos/1
+Accept: application/json
+
+###

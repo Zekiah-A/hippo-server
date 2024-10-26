@@ -1,0 +1,11 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+
+# Project
+Migrations/
+HippoData/
+hippo-config.json
+hippo-server.db
