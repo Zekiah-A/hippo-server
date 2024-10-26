@@ -9,6 +9,8 @@ public class DatabaseContext : DbContext
     public DbSet<Activation> Activations { get; set; } = null!;
     public DbSet<Verification> Verifications { get; set; } = null!;
 
+    public DbSet<Event> Events { get; set; } = null!;
+    
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     {
     }
@@ -18,7 +20,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Account>().HasKey(account => account.Id);
         modelBuilder.Entity<Account>().HasIndex(account => account.Email).IsUnique();
         
-        modelBuilder.Entity<Activation>().HasKey(account => account.Id);
+        modelBuilder.Entity<Activation>().HasKey(activation => activation.Id);
         modelBuilder.Entity<Activation>().HasIndex(activation => activation.Code).IsUnique();
         modelBuilder.Entity<Verification>().HasOne(activation => activation.Account);
 
@@ -26,5 +28,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Verification>().HasIndex(verification => verification.Code).IsUnique();
         modelBuilder.Entity<Verification>().HasOne(verification => verification.Account)
             .WithMany(account => account.Verifications);
+        
+        modelBuilder.Entity<Event>().HasKey(@event => @event.Id);
     }
 }

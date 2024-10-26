@@ -85,14 +85,24 @@ internal static partial class Program
             }
             catch (Exception ex)
             {
-                return Results.Problem("Failed to send verification email");
+                return Results.Problem("Failed to send activation email.");
             }
         });
 
         app.MapPost("/auth/activate", async (AuthActivateRequest request, [FromServices] DatabaseContext dbContext, HttpContext httpContext) =>
         {
-            throw new NotImplementedException();
-        });
+            var activation = await dbContext.Activations.Include(activation => activation.Account)
+                .SingleOrDefaultAsync(activation => activation.Account.Email == request.Email && activation.Code == request.Code);
+            if (activation is null)
+            {
+                return Results.NotFound(new ErrorResponse("Specified activation or account not found.",
+                    "auth.activate.notFound"));
+            }
+            
+            activation.Account.Activated = DateTime.UtcNow;
+            await dbContext.SaveChangesAsync();
+            return Results.Ok();
+        });;
 
         app.MapPost("/auth/login", async ([FromBody] AuthLoginRequest request, [FromServices] DatabaseContext dbContext, HttpContext httpContext) =>
         {
@@ -156,7 +166,7 @@ internal static partial class Program
             }
             catch (Exception ex)
             {
-                return Results.Problem("Failed to send verification email");
+                return Results.Problem("Failed to send verification email.");
             }
         });
 
