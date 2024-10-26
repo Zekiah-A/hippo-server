@@ -74,7 +74,7 @@ internal static partial class Program
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.WithOrigins("http://localhost/", "http://localhost:80", "https://hippo.casino")
+                policy.WithOrigins("http://localhost", "http://localhost:80", "https://hippo.casino")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -124,9 +124,15 @@ internal static partial class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        app.UseMiddleware<AuthenticationMiddleware>();
+        app.UseMiddleware<PermissionMiddleware>();
         
+        // Map endpoints
         MapAuthEndpoints();
+        MapEventEndpoints();
+        MapAccountEndpoints();
         
+        // Start
         await app.RunAsync();
     }
 }
