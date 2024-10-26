@@ -48,8 +48,8 @@ internal static partial class Program
             
             // Send mail message
             // TODO: Ensure request host and path are not something modified, such as a proxy to protect against redirect URL injection
-            var activationUrl = httpContext.Request.Protocol + httpContext.Request.Host.Value + 
-                ":" + httpContext.Request.PathBase.Value + "/activate?email=" + account.Email + "&code=" + activationCode;
+            var activationUrl = httpContext.Request.Scheme + "://" + httpContext.Request.Host.Value 
+                + "/activate?email=" + account.Email + "&code=" + activationCode;
             var mailMessage = new MailMessage
             {
                 From = new MailAddress(config!.SmtpFromEmail),
@@ -57,34 +57,35 @@ internal static partial class Program
                 Body = 
                     $"""
                     <div style="border: 2px solid black;padding: 0px;font-family: Arial, sans-serif;display: flex;flex-direction: column;">
-                        <header>
+                        <div role="heading">
                             <h1 style="background-color: rgb(223, 128, 241);display: flex;flex-direction: row;align-items: center;column-gap: 8px;position: sticky;top: 0px;margin: 0px;left: 0px;padding: 8px;"><img src="https://raw.githubusercontent.com/Zekiah-A/hippo-web/refs/heads/main/assets/dripped-out-hippo-logo.webp" width="48" height="48">Hippo Casino: Activation Code</h1>
-                        </header>
-                        <main style="margin: 8px;font-size: 1.2em;flex-grow: 1;">
+                        </div>
+                        <div role="main" style="margin: 8px;font-size: 1.2em;flex-grow: 1;">
                             <h2>👋 Hello there</h2>
                             <p>Someone used your email to register a new <a href="https://hippo.casino" style="text-decoration: none;">hippo.casino</a> account.</p>
                             <p>If that's you, then cool, your account activation code is:</p>
                             <h1 style="background-color: #f7f7f7;display: inline;padding: 8px;border: 1px solid lightgray;">{activationCode}</h1>
-                            <p>Or use this link to activate from another session <a href="{activationUrl}">{activationUrl}</a>.</p>
+                            <p>Or use this link to activate from another session <a href="{activationUrl}">activaion link</a>.</p>
                             <p>Otherwise, you can ignore this email, we'll try not to message you again ❤️.</p>
-                        </main>
-                        <footer style="opacity: 0.6;margin-top: 16px;display: flex;flex-direction: row;padding: 16px;column-gap: 16px;background-color: rgb(175, 230, 211);">
+                        </div>
+                        <div style="opacity: 0.6;margin-top: 16px;display: flex;flex-direction: row;padding: 16px;column-gap: 16px;background-color: rgb(175, 230, 211);">
                             <span>Email sent at {DateTime.UtcNow}</span>
                             <hr><span>Feel free to reply</span>
                             <hr><span>Contact <a href="mailto:{config.SmtpFromEmail}" style="text-decoration: none;">{config.SmtpFromEmail}</a></span>
-                        </footer>
+                        </div>
                     </div>
                     """,
                 IsBodyHtml = true,
             };
-            mailMessage.To.Add(account.Email);
+            mailMessage.To.Add(request.Email);
             try
             {
                 await smtpClient.SendMailAsync(mailMessage);
                 return Results.Ok();
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
+                app.Logger.LogError("{exception}", exception.ToString());
                 return Results.Problem("Failed to send activation email.");
             }
         });
@@ -139,21 +140,21 @@ internal static partial class Program
                 Body = 
                     $"""
                     <div style="border: 2px solid black;padding: 0px;font-family: Arial, sans-serif;display: flex;flex-direction: column;">
-                        <header>
+                        <div role="heading">
                             <h1 style="background-color: rgb(223, 128, 241);display: flex;flex-direction: row;align-items: center;column-gap: 8px;position: sticky;top: 0px;margin: 0px;left: 0px;padding: 8px;"><img src="https://raw.githubusercontent.com/Zekiah-A/hippo-web/refs/heads/main/assets/dripped-out-hippo-logo.webp" width="48" height="48">Hippo Casino: Verification Code</h1>
-                        </header>
-                        <main style="margin: 8px;font-size: 1.2em;flex-grow: 1;">
+                        </div>
+                        <div role="main" style="margin: 8px;font-size: 1.2em;flex-grow: 1;">
                             <h2>👋 Hello {account.FirstName}!</h2>
                             <p>Here is the login verification code for your <a href="https://hippo.casino" style="text-decoration: none;">hippo.casino</a> account.</p>
                             <p>If it was you who tried to log in, then cool, your code is:</p>
                             <h1 style="background-color: #f7f7f7;display: inline;padding: 8px;border: 1px solid lightgray;">{verificationCode}</h1>
                             <p>Otherwise, you can ignore this email, and your account will remain secure.</p>
-                        </main>
-                        <footer style="opacity: 0.6;margin-top: 16px;display: flex;flex-direction: row;padding: 16px;column-gap: 16px;background-color: rgb(175, 230, 211);">
+                        </div>
+                        <div style="opacity: 0.6;margin-top: 16px;display: flex;flex-direction: row;padding: 16px;column-gap: 16px;background-color: rgb(175, 230, 211);">
                             <span>Email sent at {DateTime.UtcNow}</span>
                             <hr><span>Feel free to reply</span>
                             <hr><span>Contact <a href="mailto:{config.SmtpFromEmail}" style="text-decoration: none;">{config.SmtpFromEmail}</a></span>
-                        </footer>
+                        </div>
                     </div>
                     """,
                 IsBodyHtml = true,
@@ -164,8 +165,9 @@ internal static partial class Program
                 await smtpClient.SendMailAsync(mailMessage);
                 return Results.Ok();
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
+                app.Logger.LogError("{exception}", exception.ToString());
                 return Results.Problem("Failed to send verification email.");
             }
         });
