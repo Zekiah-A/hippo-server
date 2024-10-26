@@ -15,23 +15,29 @@ public partial class PermissionMiddleware
 
     public async Task InvokeAsync(HttpContext context, DatabaseContext dbContext)
     {
+        var endpoint = context.GetEndpoint();
+        var requiredPermissions = endpoint?.Metadata.GetMetadata<RequiredPermissionsMetadata>()?.Permissions;
+
+        // No permissions - no account requirement
+        if (requiredPermissions == null)
+        {
+            await next(context);
+            return;
+        }
+
+        // Permissions present, require account authorisation
         if (!context.Items.TryGetValue("Account", out var accountObj) || accountObj is not Account account)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
-
-        var endpoint = context.GetEndpoint();
-        var requiredPermissions = endpoint?.Metadata.GetMetadata<RequiredPermissionsMetadata>()?.Permissions;
-
-        if (requiredPermissions == null || await HasRequiredPermissions(account, requiredPermissions, dbContext, context))
+        if (await HasRequiredPermissions(account, requiredPermissions, dbContext, context))
         {
             await next(context);
+            return;
         }
-        else
-        {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        }
+        
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
     }
 
     private async Task<bool> HasRequiredPermissions(Account account, string[] requiredPermissions, DatabaseContext dbContext, HttpContext context)
